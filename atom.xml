@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Daniel Szukitsch]]></title>
+  <link href="http://szuuuken.at/atom.xml" rel="self"/>
+  <link href="http://szuuuken.at/"/>
+  <updated>2018-09-10T23:52:28+02:00</updated>
+  <id>http://szuuuken.at/</id>
+  <author>
+    <name><![CDATA[Daniel Szukitsch]]></name>
+    <email><![CDATA[daniel@szuuuken.at]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Ausreißer in Einer Liste Von Zahlen Erkennen]]></title>
+    <link href="http://szuuuken.at/blog/2018/04/28/ausreisser-in-einer-liste-von-zahlen-erkennen/"/>
+    <updated>2018-04-28T19:40:17+02:00</updated>
+    <id>http://szuuuken.at/blog/2018/04/28/ausreisser-in-einer-liste-von-zahlen-erkennen</id>
+    <content type="html"><![CDATA[<p>Vor kurzem fragte mich einer meiner Freunde ob ich eine Idee hätte wie man mehrere Ausreißer in einer kleinen Liste von Zahlen (maximal 8 Zahlen) erkennen könnte. Ich hatte zwar eine ungefähre Idee wie man das Problem angehen könnte, aber das Problem war doch schwieriger als ich dachte und begann im Internet zu recherchieren.</p>
+
+<p>Die für mich am besten für mich passende Möglichkeit Ausreißer zu finden ist die <strong>modified Z-scores</strong> Methode von <a href="https://www.itl.nist.gov/div898/handbook/eda/section4/eda43.htm#Iglewicz">Boris Iglewicz und David Hoaglin</a>. Mit dieser Methode ist es möglich mehrere Ausreißer in einer kleinen( &le; 8 Elemente) Liste zu identifizieren. Größere Listen funktionieren ebenfalls ;)</p>
+
+<p>Die <strong>modified Z-scores</strong> Methode berechnet für jedes Element in der Liste einen <strong>modified Z-score</strong> <strong>M<sub>i</sub></strong> und prüft diesen Wert gegen einen threshold (typischerweise 3.5). Wenn der <strong>modified Z-score</strong> eines Elements den threshold übersteigt wird das Element als Ausreißer markiert.</p>
+
+<p>Der <strong>modified Z-score</strong> <strong>M<sub>i</sub></strong> wird wie folgt berechnet:
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <msub>
+    <mi>M</mi>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>i</mi>
+    </mrow>
+  </msub>
+  <mo>=</mo>
+  <mfrac>
+    <mrow>
+      <mn>0.6745</mn>
+      <mo stretchy="false">(</mo>
+      <msub>
+        <mi>x</mi>
+        <mrow class="MJX-TeXAtom-ORD">
+          <mi>i</mi>
+        </mrow>
+      </msub>
+      <mo>&#x2212;<!-- − --></mo>
+      <mrow class="MJX-TeXAtom-ORD">
+        <mover>
+          <mi>x</mi>
+          <mo stretchy="false">&#x007E;<!-- ~ --></mo>
+        </mover>
+      </mrow>
+      <mo stretchy="false">)</mo>
+    </mrow>
+    <mstyle displaystyle="false" scriptlevel="0">
+      <mtext>MAD</mtext>
+    </mstyle>
+  </mfrac>
+</math></p>
+
+<p>Der in der Formel angegebene <strong>MAD</strong> ist die <a href="https://en.wikipedia.org/wiki/Median_absolute_deviation">median absolute deviation</a>.</p>
+
+<p>Mit Hilfe dieser Formel habe ich erst mal einen kleinen Prototypen in python gebaut um das ganze testen zu können.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">calc_mad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">median</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">medians</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">medians</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">medians</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">iglewicz_hoaglin</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">mad</span> <span class="o">=</span> <span class="n">calc_mad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">median</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">outliers</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">score</span> <span class="o">=</span> <span class="mf">0.6745</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">)</span> <span class="o">/</span> <span class="n">mad</span>
+</span><span class='line'>      <span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;:</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="n">score</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">):</span>
+</span><span class='line'>          <span class="n">outliers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">outliers</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">threshold</span> <span class="o">=</span> <span class="mf">3.5</span>
+</span><span class='line'><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">modified_z_scores</span> <span class="o">=</span> <span class="n">iglewicz_hoaglin</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">result: &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">modified_z_scores</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Bei meinen ersten Tests hat diese Implementation ohne Probleme funktioniert, jedoch bin ich bald auf ein Problem gestoßen, welches ich nicht alleine lösen konnte. Beim testen der Liste [8,8,8,8,8,8,100] wurde der <strong>MAD=0</strong> was einen <strong>division by 0 error</strong> beim berechnen des <strong>M<sub>i</sub></strong> auslöste. Das Problem liegt daran, dass der <strong>MAD</strong> immer 0 wird wenn mehr als die Hälfte der Element in der Liste den gleichen Wert haben.</p>
+
+<p>Mir gelang es zwar einen Workaround zu basteln der funktionierte, jedoch sich falsch anfühlte. Also beschloss ich um Hilfe im Statistikableger von StackExchange <strong>Cross Validated</strong> zu <a href="https://stats.stackexchange.com/questions/339932/iglewicz-and-hoaglin-outlier-test-with-modified-z-scores-what-should-i-do-if-t">fragen</a>. Mit der dortigen Hilfe konnte ich das Problem lösen. Immer wenn der <strong>MAD</strong> 0 wird muss der <strong>MAD</strong> auf die kleinste mögliche Zahl gesetzt werden.</p>
+
+<p>Zum Schluss habe ich, ein <a href="https://gist.github.com/Szuuuken/1c9fc3ab9d08d6a12bad5b929cbb5a46">gist</a> geschrieben, dass vollkommen ohne imports funktioniert:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">calc_median</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span class='line'>    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="n">length</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">index01</span> <span class="o">=</span> <span class="p">(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="n">index02</span> <span class="o">=</span> <span class="n">index01</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">index01</span><span class="p">]</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="n">index02</span><span class="p">])</span><span class="o">/</span><span class="mf">2.0</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">result</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">calc_mad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">median</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">medians</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">medians</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">medians</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">mad</span> <span class="o">=</span>  <span class="n">calc_median</span><span class="p">(</span><span class="n">medians</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="n">mad</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">mad</span> <span class="o">=</span> <span class="mf">2.2250738585072014e-308</span> <span class="c"># sys.float_info.min</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">mad</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">iglewicz_hoaglin</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">data</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">median</span> <span class="o">=</span> <span class="n">calc_median</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">mad</span> <span class="o">=</span> <span class="n">calc_mad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">median</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;threshold:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">threshold</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;median:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">median</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;MAD:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mad</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;data:&#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">score</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">0.6745</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">)</span> <span class="o">/</span> <span class="n">mad</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;:</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="n">score</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">):</span>
+</span><span class='line'>          <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">result</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">threshold</span> <span class="o">=</span> <span class="mf">3.5</span>
+</span><span class='line'><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">modified_z_scores</span> <span class="o">=</span> <span class="n">iglewicz_hoaglin</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">result: &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">modified_z_scores</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Links und Quellen:</p>
+
+<ul>
+<li><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm">https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm</a></li>
+<li><a href="http://colingorrie.github.io/outlier-detection.html#modified-z-score-method">http://colingorrie.github.io/outlier-detection.html#modified-z-score-method</a></li>
+<li><a href="http://contchart.com/outliers.aspx">http://contchart.com/outliers.aspx</a></li>
+<li><a href="https://gist.github.com/Szuuuken/1c9fc3ab9d08d6a12bad5b929cbb5a46">https://gist.github.com/Szuuuken/1c9fc3ab9d08d6a12bad5b929cbb5a46</a></li>
+<li><a href="https://stats.stackexchange.com/questions/339932/iglewicz-and-hoaglin-outlier-test-with-modified-z-scores-what-should-i-do-if-t">https://stats.stackexchange.com/questions/339932/iglewicz-and-hoaglin-outlier-test-with-modified-z-scores-what-should-i-do-if-t</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Median_absolute_deviation">https://en.wikipedia.org/wiki/Median_absolute_deviation</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Verschwundene Windows 10 Taskbar/desktop Icons]]></title>
+    <link href="http://szuuuken.at/blog/2016/04/20/verschwundene-windows-10-taskbar-slash-desktop-icons/"/>
+    <updated>2016-04-20T10:41:37+02:00</updated>
+    <id>http://szuuuken.at/blog/2016/04/20/verschwundene-windows-10-taskbar-slash-desktop-icons</id>
+    <content type="html"><![CDATA[<p>Nach einem upgrade von Windows 8.1 auf Windows 10 war traten folgende Probleme auf:</p>
+
+<ul>
+<li>die Taskbar wurde zwar angezeigt, jedoch wurden keine Icons angezeigt</li>
+<li>das Startmenu ließ sich nicht mehr öffnen</li>
+<li>Desktop Icons waren verschwundene</li>
+<li>Metro Apps funktionierten nicht mehr &ndash;> unter anderem Systemsteuerung usw.</li>
+</ul>
+
+
+<p>Nach einer vielzahl von Versuchen das System zu reparieren ohne es neu zu installieren, fand ich diesen <a href="http://www.tenforums.com/general-support/15219-windows-10-start-menu-metro-apps-taskbar-icons-not-working.html#post337248" target="_blank">Post</a>. In diesem Post wurde beschrieben wie man alle Apps mit einem Powershell Befehl neustallieren kann:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='powershell'><span class='line'><span class="nb">Get-AppXPackage</span> <span class="n">-AllUsers</span> <span class="p">|</span> <span class="k">Foreach</span> <span class="p">{</span><span class="nb">Add-AppxPackage</span> <span class="n">-DisableDevelopmentMode</span> <span class="n">-Register</span> <span class="s2">&quot;</span><span class="p">$(</span><span class="nv">$_</span><span class="p">.</span><span class="n">InstallLocation</span><span class="p">)</span><span class="s2">\AppXManifest.xml&quot;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In meinem Fall lief das Skript mehrere Stunden und ich musste es abbrechen, aber nach einem neustart funktierte Windows 10 wieder wie gewohnt.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Fedora 16: Oracle Java &amp; Firefox]]></title>
+    <link href="http://szuuuken.at/blog/2012/05/22/fedora-16-oracle-java-and-firefox/"/>
+    <updated>2012-05-22T17:16:16+02:00</updated>
+    <id>http://szuuuken.at/blog/2012/05/22/fedora-16-oracle-java-and-firefox</id>
+    <content type="html"><![CDATA[<p>Vor kurzem musste ich ein Java Applet verwenden, welches nur mit dem oracleJDK ausführbar war.
+Firefox verwendet unter Linux per default das openJDK, was sich aber ganz leicht ändern lässt:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='Bash'><span class='line'><span class="nv">$ </span>sudo ln -s /usr/java/latest/jre/lib/amd64/libnpjp2.so /usr/lib64/mozilla/plugins/libnpjp2.so
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Broken Git Repo]]></title>
+    <link href="http://szuuuken.at/blog/2011/06/06/broken-git-repo/"/>
+    <updated>2011-06-06T19:31:22+02:00</updated>
+    <id>http://szuuuken.at/blog/2011/06/06/broken-git-repo</id>
+    <content type="html"><![CDATA[<p>Aufgrund eines I/O Fehlers ging ein Teil eines git repos kaputt (zum glück habe ich keine wichtigen Daten verloren).  Ich konnte zwar noch commiten aber nicht mehr pushen. Wenn ich versuchte mein repo zu pushen warf mir git folgenden Fehler aus:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>error: inflate: data stream error <span class="o">(</span>incorrect data check<span class="o">)</span>
+</span><span class='line'>error: corrupt loose object <span class="s1">&#39;6e8b481aab34ab08aba71c4ba8d49d384b0fa61a&#39;</span>
+</span><span class='line'>fatal: loose object 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a <span class="o">(</span>stored in .git/objects/6e/8b481aab34ab08aba71c4ba8d49d384b0fa61a<span class="o">)</span> is corrupt
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Ich versuchte das git repo mittels</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git fsck --full
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>und anderen Befehlen zu repareien. Jedoch meldete mir git immer wieder den oben angeführten Fehler.
+Das Problem lag daran, dass git immer versucht auf das kaputte File zuzugreifen und es nicht lesen konnte weil es kaputt war.</p>
+
+<p>Nach einigem suchen im Internet bin ich auf ein <a href="https://git.wiki.kernel.org/index.php/GitFaq#How_to_fix_a_broken_repository.3F">Tutorial</a> von Linus Torvalds gestoßen wo er beschriebt wie man kaputte repos wieder reparieren kann. Nur leider konnte dieses Tutorial nur Teilweise helfen. Aber der entscheidende Punkt war das Linus ganz zu beginn das kaputte Objekt einfach entfernt und nocheinmal fsck ausführt:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>mv .git/objects/6e/8b481aab34ab08aba71c4ba8d49d384b0fa61a ../
+</span><span class='line'><span class="nv">$ </span>git fsck --full<span class="sb">`</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ausführt.</p>
+
+<p>Nun wurden auf einmal ein paar dangling blobs (kann man ignorieren) und ein missing blob (der von vorhin angezeigt):</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>dangling blob 5d3254aa99d8966e87d411ecce138f8779450f17
+</span><span class='line'>missing blob 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a
+</span><span class='line'>dangling blob 36bbd2476ff28ea7073262e60b4ca9f698ae3019
+</span><span class='line'>dangling blob 70c2b38508cbdbdf8e3f49815665331f283ffa83
+</span><span class='line'>dangling blob c9d5288cc6b1ce904d4d29d8a2ed0a6b23c9f24a
+</span><span class='line'>dangling blob 46e092070415b722d698401be4d94fed63565c90
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Viel weiter bin ich mit dem Tutorial von Linus leider nicht gekommen da die weiteren Schritte nicht möglich waren. An dieser Stelle hat mit das <a href="https://git-scm.com/book/en/v2/Git-Internals-Maintenance-and-Data-Recovery">proGit</a> Buch mit dem Kapitel ”Maintenance and Data Recovery” weiter geholfen. Hier wird empfolen sich einen branch anzulegen von einem noch funktionierendem Commit. Mit Hilfe von</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git log -g
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>kann man sich alle commit und deren hash anzeigen lassen. Nun kann man einen branch erstellen der von einem funktionierenem commit ausgeht:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git branch recover-branch b28f248bac04a7e723dc8421372aa3ca2e
+</span><span class='line'><span class="nv">$ </span>git checkout recover-branch<span class="sb">`</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Nun wurde mir beim ausführen von fsck auch ein kaputter Link wie in den Tutorial von Linus angezeigt:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git fsck --fullbroken link from
+</span><span class='line'>tree 45d57d2edc155c00e8ef8286ba828c75c7d63449
+</span><span class='line'>to blob 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a
+</span><span class='line'>     dangling blob 5d3254aa99d8966e87d411ecce138f8779450f17
+</span><span class='line'>     missing blob 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a
+</span><span class='line'>     dangling blob 36bbd2476ff28ea7073262e60b4ca9f698ae3019
+</span><span class='line'>     dangling blob 70c2b38508cbdbdf8e3f49815665331f283ffa83
+</span><span class='line'>     dangling blob c9d5288cc6b1ce904d4d29d8a2ed0a6b23c9f24a
+</span><span class='line'>     dangling blob 46e092070415b722d698401be4d94fed63565c90
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>und konnte dem Tutorial weiter folgen. Ich schaute also nach auf was der Link zeigt und addete die Files per anhand:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git ls- tree 45d57d2edc155c00e8ef8286ba828c75c7d63449
+</span><span class='line'><span class="m">100755</span> blob e54e910c0252d03b27b78caead2fc014f1794592 file1
+</span><span class='line'><span class="m">100755</span> blob 55c97f03572902a927c353e4265f0f884d7bc6a4 file2
+</span><span class='line'><span class="m">100755</span> blob 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a file3
+</span><span class='line'><span class="m">100755</span> blob cd18fc89c31c165f882aafbe3db179c741c025ed file4
+</span><span class='line'><span class="nv">$git</span> <span class="nb">hash</span>-object -w path/to/file1
+</span><span class='line'><span class="nv">$git</span> <span class="nb">hash</span>-object -w path/to/file2
+</span><span class='line'><span class="nv">$git</span> <span class="nb">hash</span>-object -w path/to/file3
+</span><span class='line'><span class="nv">$git</span> <span class="nb">hash</span>-object -w path/to/file4
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Danach habe ich ein add und ein commit gemacht bin mir aber nicht ganz sicher ob dies notwendig war. Jetzt nachdem ich ein weiteres mal fsck ausführte gab es keinen weiteren missing blob =)</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git fsck --fulldangling blob 5d3254aa99d8966e87d411ecce138f8779450f17
+</span><span class='line'>dangling blob 36bbd2476ff28ea7073262e60b4ca9f698ae3019
+</span><span class='line'>dangling blob 70c2b38508cbdbdf8e3f49815665331f283ffa83
+</span><span class='line'>dangling blob c9d5288cc6b1ce904d4d29d8a2ed0a6b23c9f24a
+</span><span class='line'>dangling blob 46e092070415b722d698401be4d94fed63565c90
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Zum schluss muss noch ein merge vom master branch in den recover-branch durchgeführt werden:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git merge master
+</span><span class='line'>Merge made by recursive.
+</span><span class='line'>Auto packing the repository <span class="k">for</span> optimum performance.
+</span><span class='line'>You may alsorun <span class="s2">&quot;git gc&quot;</span> manually.
+</span><span class='line'>See <span class="s2">&quot;git help gc&quot;</span> <span class="k">for</span> more information.
+</span><span class='line'>Counting objects: 17619, <span class="k">done</span>.
+</span><span class='line'>Delta compression using up to <span class="m">2</span> threads.
+</span><span class='line'>Compressing objects: 100% <span class="o">(</span>16973/16973<span class="o">)</span>, <span class="k">done</span>.
+</span><span class='line'>Writing objects: 100% <span class="o">(</span>17619/17619<span class="o">)</span>, <span class="k">done</span>.
+</span><span class='line'>Total <span class="m">17619</span> <span class="o">(</span>delta 6323<span class="o">)</span>, reused <span class="m">0</span> <span class="o">(</span>delta 0<span class="o">)</span>
+</span><span class='line'>Removing duplicate objects: 100% <span class="o">(</span>256/256<span class="o">)</span>, <span class="k">done</span>.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>und das pushen funktioniert auch wieder =)</p>
+]]></content>
+  </entry>
+  
+</feed>

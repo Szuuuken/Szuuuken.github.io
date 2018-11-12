@@ -1,0 +1,280 @@
+
+<!doctype html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!-- Consider adding an manifest.appcache: h5bp.com/d/Offline -->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
+       More info: h5bp.com/b/378 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>Broken Git Repo |  Daniel Szukitsch</title>
+  <meta name="author" content="Daniel Szukitsch">
+  
+
+  
+  <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+
+  <!-- CSS: implied media=all -->
+  <!-- CSS concatenated and minified via ant build script-->
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <!--
+  <link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+  -->
+  <!-- end CSS-->
+
+  <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
+
+  <!-- All JavaScript at the bottom, except for Modernizr / Respond.
+       Modernizr enables HTML5 elements & feature detects; Respond is a polyfill for min/max-width CSS3 Media Queries
+       For optimal performance, use a custom Modernizr build: www.modernizr.com/download/ -->
+  <script src="/javascripts/libs/modernizr-2.0.6.min.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-MML-AM_CHTML' async></script>
+</head>
+
+<body id="post">
+
+  <div id="container">
+    <header>
+      <a href="/">
+        <img class="linked-list" src="/images/logo-yellow.svg">
+        <div class="author">Daniel Szukitsch</div>
+        <h1 class="subtitle">things i do</h1></a>
+    </header>
+
+    <nav role="navigation" ><ul class="main-navigation">
+  <li style='float:left;margin-right:5px'><a class='nav' href="/">Home</a></li>
+</ul><br><br>
+</nav>
+    <article>
+
+
+  <h1 class="article-title">Broken Git Repo</h1>
+  <div class="article-content"><p>Aufgrund eines I/O Fehlers ging ein Teil eines git repos kaputt (zum glück habe ich keine wichtigen Daten verloren).  Ich konnte zwar noch commiten aber nicht mehr pushen. Wenn ich versuchte mein repo zu pushen warf mir git folgenden Fehler aus:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>error: inflate: data stream error <span class="o">(</span>incorrect data check<span class="o">)</span>
+</span><span class='line'>error: corrupt loose object <span class="s1">&#39;6e8b481aab34ab08aba71c4ba8d49d384b0fa61a&#39;</span>
+</span><span class='line'>fatal: loose object 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a <span class="o">(</span>stored in .git/objects/6e/8b481aab34ab08aba71c4ba8d49d384b0fa61a<span class="o">)</span> is corrupt
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Ich versuchte das git repo mittels</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git fsck --full
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>und anderen Befehlen zu repareien. Jedoch meldete mir git immer wieder den oben angeführten Fehler.
+Das Problem lag daran, dass git immer versucht auf das kaputte File zuzugreifen und es nicht lesen konnte weil es kaputt war.</p>
+
+<p>Nach einigem suchen im Internet bin ich auf ein <a href="https://git.wiki.kernel.org/index.php/GitFaq#How_to_fix_a_broken_repository.3F">Tutorial</a> von Linus Torvalds gestoßen wo er beschriebt wie man kaputte repos wieder reparieren kann. Nur leider konnte dieses Tutorial nur Teilweise helfen. Aber der entscheidende Punkt war das Linus ganz zu beginn das kaputte Objekt einfach entfernt und nocheinmal fsck ausführt:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>mv .git/objects/6e/8b481aab34ab08aba71c4ba8d49d384b0fa61a ../
+</span><span class='line'><span class="nv">$ </span>git fsck --full<span class="sb">`</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ausführt.</p>
+
+<p>Nun wurden auf einmal ein paar dangling blobs (kann man ignorieren) und ein missing blob (der von vorhin angezeigt):</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>dangling blob 5d3254aa99d8966e87d411ecce138f8779450f17
+</span><span class='line'>missing blob 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a
+</span><span class='line'>dangling blob 36bbd2476ff28ea7073262e60b4ca9f698ae3019
+</span><span class='line'>dangling blob 70c2b38508cbdbdf8e3f49815665331f283ffa83
+</span><span class='line'>dangling blob c9d5288cc6b1ce904d4d29d8a2ed0a6b23c9f24a
+</span><span class='line'>dangling blob 46e092070415b722d698401be4d94fed63565c90
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Viel weiter bin ich mit dem Tutorial von Linus leider nicht gekommen da die weiteren Schritte nicht möglich waren. An dieser Stelle hat mit das <a href="https://git-scm.com/book/en/v2/Git-Internals-Maintenance-and-Data-Recovery">proGit</a> Buch mit dem Kapitel ”Maintenance and Data Recovery” weiter geholfen. Hier wird empfolen sich einen branch anzulegen von einem noch funktionierendem Commit. Mit Hilfe von</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git log -g
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>kann man sich alle commit und deren hash anzeigen lassen. Nun kann man einen branch erstellen der von einem funktionierenem commit ausgeht:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git branch recover-branch b28f248bac04a7e723dc8421372aa3ca2e
+</span><span class='line'><span class="nv">$ </span>git checkout recover-branch<span class="sb">`</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Nun wurde mir beim ausführen von fsck auch ein kaputter Link wie in den Tutorial von Linus angezeigt:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git fsck --fullbroken link from
+</span><span class='line'>tree 45d57d2edc155c00e8ef8286ba828c75c7d63449
+</span><span class='line'>to blob 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a
+</span><span class='line'>     dangling blob 5d3254aa99d8966e87d411ecce138f8779450f17
+</span><span class='line'>     missing blob 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a
+</span><span class='line'>     dangling blob 36bbd2476ff28ea7073262e60b4ca9f698ae3019
+</span><span class='line'>     dangling blob 70c2b38508cbdbdf8e3f49815665331f283ffa83
+</span><span class='line'>     dangling blob c9d5288cc6b1ce904d4d29d8a2ed0a6b23c9f24a
+</span><span class='line'>     dangling blob 46e092070415b722d698401be4d94fed63565c90
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>und konnte dem Tutorial weiter folgen. Ich schaute also nach auf was der Link zeigt und addete die Files per anhand:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git ls- tree 45d57d2edc155c00e8ef8286ba828c75c7d63449
+</span><span class='line'><span class="m">100755</span> blob e54e910c0252d03b27b78caead2fc014f1794592 file1
+</span><span class='line'><span class="m">100755</span> blob 55c97f03572902a927c353e4265f0f884d7bc6a4 file2
+</span><span class='line'><span class="m">100755</span> blob 6e8b481aab34ab08aba71c4ba8d49d384b0fa61a file3
+</span><span class='line'><span class="m">100755</span> blob cd18fc89c31c165f882aafbe3db179c741c025ed file4
+</span><span class='line'><span class="nv">$git</span> <span class="nb">hash</span>-object -w path/to/file1
+</span><span class='line'><span class="nv">$git</span> <span class="nb">hash</span>-object -w path/to/file2
+</span><span class='line'><span class="nv">$git</span> <span class="nb">hash</span>-object -w path/to/file3
+</span><span class='line'><span class="nv">$git</span> <span class="nb">hash</span>-object -w path/to/file4
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Danach habe ich ein add und ein commit gemacht bin mir aber nicht ganz sicher ob dies notwendig war. Jetzt nachdem ich ein weiteres mal fsck ausführte gab es keinen weiteren missing blob =)</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git fsck --fulldangling blob 5d3254aa99d8966e87d411ecce138f8779450f17
+</span><span class='line'>dangling blob 36bbd2476ff28ea7073262e60b4ca9f698ae3019
+</span><span class='line'>dangling blob 70c2b38508cbdbdf8e3f49815665331f283ffa83
+</span><span class='line'>dangling blob c9d5288cc6b1ce904d4d29d8a2ed0a6b23c9f24a
+</span><span class='line'>dangling blob 46e092070415b722d698401be4d94fed63565c90
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Zum schluss muss noch ein merge vom master branch in den recover-branch durchgeführt werden:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git merge master
+</span><span class='line'>Merge made by recursive.
+</span><span class='line'>Auto packing the repository <span class="k">for</span> optimum performance.
+</span><span class='line'>You may alsorun <span class="s2">&quot;git gc&quot;</span> manually.
+</span><span class='line'>See <span class="s2">&quot;git help gc&quot;</span> <span class="k">for</span> more information.
+</span><span class='line'>Counting objects: 17619, <span class="k">done</span>.
+</span><span class='line'>Delta compression using up to <span class="m">2</span> threads.
+</span><span class='line'>Compressing objects: 100% <span class="o">(</span>16973/16973<span class="o">)</span>, <span class="k">done</span>.
+</span><span class='line'>Writing objects: 100% <span class="o">(</span>17619/17619<span class="o">)</span>, <span class="k">done</span>.
+</span><span class='line'>Total <span class="m">17619</span> <span class="o">(</span>delta 6323<span class="o">)</span>, reused <span class="m">0</span> <span class="o">(</span>delta 0<span class="o">)</span>
+</span><span class='line'>Removing duplicate objects: 100% <span class="o">(</span>256/256<span class="o">)</span>, <span class="k">done</span>.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>und das pushen funktioniert auch wieder =)</p>
+</div>
+  
+
+</article>
+
+
+      <p class="meta">
+      
+      
+        <a class="basic-alignment right nav" href="/blog/2012/05/22/fedora-16-oracle-java-and-firefox/" title="Next Post: Fedora 16: oracle java &amp; Firefox">Fedora 16: oracle java &amp; Firefox &raquo;</a>
+      
+    </p>
+       <footer role="contentinfo" >
+    	<p>
+		Copyright &copy; 2018 - Daniel Szukitsch -
+		 <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span> |
+		 <span class="credit">Themed with <a href="https://github.com/rwwaskk/linkedlist">LinkedList</a></span>
+	</p>
+    </footer>
+
+  </div>
+    <!-- JavaScript at the bottom for fast page loading -->
+
+  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
+  <!--
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+  -->
+  <script src="/javascripts/libs/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="js/libs/jquery-1.6.2.min.js"><\/script>')</script>
+
+
+  <!-- scripts concatenated and minified via ant build script-->
+  <script defer src="/javascripts/app.js"></script>
+  <!-- end scripts-->
+
+
+
+  <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
+       chromium.org/developers/how-tos/chrome-frame-getting-started -->
+  <!--[if lt IE 7 ]>
+    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+  <![endif]-->
+
+<!--
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+
+-->
+
+</body>
+</html>
+

@@ -1,0 +1,359 @@
+
+<!doctype html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!-- Consider adding an manifest.appcache: h5bp.com/d/Offline -->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
+       More info: h5bp.com/b/378 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>Ausreißer in einer Liste von Zahlen erkennen |  Daniel Szukitsch</title>
+  <meta name="author" content="Daniel Szukitsch">
+  
+
+  
+  <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+
+  <!-- CSS: implied media=all -->
+  <!-- CSS concatenated and minified via ant build script-->
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <!--
+  <link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+  -->
+  <!-- end CSS-->
+
+  <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
+
+  <!-- All JavaScript at the bottom, except for Modernizr / Respond.
+       Modernizr enables HTML5 elements & feature detects; Respond is a polyfill for min/max-width CSS3 Media Queries
+       For optimal performance, use a custom Modernizr build: www.modernizr.com/download/ -->
+  <script src="/javascripts/libs/modernizr-2.0.6.min.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-MML-AM_CHTML' async></script>
+</head>
+
+<body id="post">
+
+  <div id="container">
+    <header>
+      <a href="/">
+        <img class="linked-list" src="/images/logo-yellow.svg">
+        <div class="author">Daniel Szukitsch</div>
+        <h1 class="subtitle">things i do</h1></a>
+    </header>
+
+    <nav role="navigation" ><ul class="main-navigation">
+  <li style='float:left;margin-right:5px'><a class='nav' href="/">Home</a></li>
+</ul><br><br>
+</nav>
+    <article>
+
+
+  <h1 class="article-title">Ausreißer in Einer Liste Von Zahlen Erkennen</h1>
+  <div class="article-content"><p>Vor kurzem fragte mich einer meiner Freunde ob ich eine Idee hätte wie man mehrere Ausreißer in einer kleinen Liste von Zahlen (maximal 8 Zahlen) erkennen könnte. Ich hatte zwar eine ungefähre Idee wie man das Problem angehen könnte, aber das Problem war doch schwieriger als ich dachte und begann im Internet zu recherchieren.</p>
+
+<p>Die für mich am besten für mich passende Möglichkeit Ausreißer zu finden ist die <strong>modified Z-scores</strong> Methode von <a href="https://www.itl.nist.gov/div898/handbook/eda/section4/eda43.htm#Iglewicz">Boris Iglewicz und David Hoaglin</a>. Mit dieser Methode ist es möglich mehrere Ausreißer in einer kleinen( &le; 8 Elemente) Liste zu identifizieren. Größere Listen funktionieren ebenfalls ;)</p>
+
+<p>Die <strong>modified Z-scores</strong> Methode berechnet für jedes Element in der Liste einen <strong>modified Z-score</strong> <strong>M<sub>i</sub></strong> und prüft diesen Wert gegen einen threshold (typischerweise 3.5). Wenn der <strong>modified Z-score</strong> eines Elements den threshold übersteigt wird das Element als Ausreißer markiert.</p>
+
+<p>Der <strong>modified Z-score</strong> <strong>M<sub>i</sub></strong> wird wie folgt berechnet:
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <msub>
+    <mi>M</mi>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>i</mi>
+    </mrow>
+  </msub>
+  <mo>=</mo>
+  <mfrac>
+    <mrow>
+      <mn>0.6745</mn>
+      <mo stretchy="false">(</mo>
+      <msub>
+        <mi>x</mi>
+        <mrow class="MJX-TeXAtom-ORD">
+          <mi>i</mi>
+        </mrow>
+      </msub>
+      <mo>&#x2212;<!-- − --></mo>
+      <mrow class="MJX-TeXAtom-ORD">
+        <mover>
+          <mi>x</mi>
+          <mo stretchy="false">&#x007E;<!-- ~ --></mo>
+        </mover>
+      </mrow>
+      <mo stretchy="false">)</mo>
+    </mrow>
+    <mstyle displaystyle="false" scriptlevel="0">
+      <mtext>MAD</mtext>
+    </mstyle>
+  </mfrac>
+</math></p>
+
+<p>Der in der Formel angegebene <strong>MAD</strong> ist die <a href="https://en.wikipedia.org/wiki/Median_absolute_deviation">median absolute deviation</a>.</p>
+
+<p>Mit Hilfe dieser Formel habe ich erst mal einen kleinen Prototypen in python gebaut um das ganze testen zu können.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">calc_mad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">median</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">medians</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">medians</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">medians</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">iglewicz_hoaglin</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">mad</span> <span class="o">=</span> <span class="n">calc_mad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">median</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">outliers</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">score</span> <span class="o">=</span> <span class="mf">0.6745</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">)</span> <span class="o">/</span> <span class="n">mad</span>
+</span><span class='line'>      <span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;:</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="n">score</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">):</span>
+</span><span class='line'>          <span class="n">outliers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">outliers</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">threshold</span> <span class="o">=</span> <span class="mf">3.5</span>
+</span><span class='line'><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">modified_z_scores</span> <span class="o">=</span> <span class="n">iglewicz_hoaglin</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">result: &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">modified_z_scores</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Bei meinen ersten Tests hat diese Implementation ohne Probleme funktioniert, jedoch bin ich bald auf ein Problem gestoßen, welches ich nicht alleine lösen konnte. Beim testen der Liste [8,8,8,8,8,8,100] wurde der <strong>MAD=0</strong> was einen <strong>division by 0 error</strong> beim berechnen des <strong>M<sub>i</sub></strong> auslöste. Das Problem liegt daran, dass der <strong>MAD</strong> immer 0 wird wenn mehr als die Hälfte der Element in der Liste den gleichen Wert haben.</p>
+
+<p>Mir gelang es zwar einen Workaround zu basteln der funktionierte, jedoch sich falsch anfühlte. Also beschloss ich um Hilfe im Statistikableger von StackExchange <strong>Cross Validated</strong> zu <a href="https://stats.stackexchange.com/questions/339932/iglewicz-and-hoaglin-outlier-test-with-modified-z-scores-what-should-i-do-if-t">fragen</a>. Mit der dortigen Hilfe konnte ich das Problem lösen. Immer wenn der <strong>MAD</strong> 0 wird muss der <strong>MAD</strong> auf die kleinste mögliche Zahl gesetzt werden.</p>
+
+<p>Zum Schluss habe ich, ein <a href="https://gist.github.com/Szuuuken/1c9fc3ab9d08d6a12bad5b929cbb5a46">gist</a> geschrieben, dass vollkommen ohne imports funktioniert:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">calc_median</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span class='line'>    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="n">length</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">index01</span> <span class="o">=</span> <span class="p">(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="n">index02</span> <span class="o">=</span> <span class="n">index01</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">index01</span><span class="p">]</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="n">index02</span><span class="p">])</span><span class="o">/</span><span class="mf">2.0</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">result</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">calc_mad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">median</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">medians</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">medians</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">medians</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">mad</span> <span class="o">=</span>  <span class="n">calc_median</span><span class="p">(</span><span class="n">medians</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="n">mad</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">mad</span> <span class="o">=</span> <span class="mf">2.2250738585072014e-308</span> <span class="c"># sys.float_info.min</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">mad</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">iglewicz_hoaglin</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">data</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">median</span> <span class="o">=</span> <span class="n">calc_median</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">mad</span> <span class="o">=</span> <span class="n">calc_mad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">median</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;threshold:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">threshold</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;median:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">median</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;MAD:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mad</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;data:&#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">score</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">0.6745</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">median</span><span class="p">)</span> <span class="o">/</span> <span class="n">mad</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;:</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="n">score</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">):</span>
+</span><span class='line'>          <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">result</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">threshold</span> <span class="o">=</span> <span class="mf">3.5</span>
+</span><span class='line'><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">modified_z_scores</span> <span class="o">=</span> <span class="n">iglewicz_hoaglin</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">result: &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">modified_z_scores</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Links und Quellen:</p>
+
+<ul>
+<li><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm">https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm</a></li>
+<li><a href="http://colingorrie.github.io/outlier-detection.html#modified-z-score-method">http://colingorrie.github.io/outlier-detection.html#modified-z-score-method</a></li>
+<li><a href="http://contchart.com/outliers.aspx">http://contchart.com/outliers.aspx</a></li>
+<li><a href="https://gist.github.com/Szuuuken/1c9fc3ab9d08d6a12bad5b929cbb5a46">https://gist.github.com/Szuuuken/1c9fc3ab9d08d6a12bad5b929cbb5a46</a></li>
+<li><a href="https://stats.stackexchange.com/questions/339932/iglewicz-and-hoaglin-outlier-test-with-modified-z-scores-what-should-i-do-if-t">https://stats.stackexchange.com/questions/339932/iglewicz-and-hoaglin-outlier-test-with-modified-z-scores-what-should-i-do-if-t</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Median_absolute_deviation">https://en.wikipedia.org/wiki/Median_absolute_deviation</a></li>
+</ul>
+
+</div>
+  
+
+</article>
+
+
+      <p class="meta">
+      
+        <a class="basic-alignment left nav" href="/blog/2016/04/20/verschwundene-windows-10-taskbar-slash-desktop-icons/" title="Previous Post: verschwundene Windows 10 taskbar/desktop icons">&laquo; verschwundene Windows 10 taskbar/desktop icons</a>
+      
+      
+    </p>
+       <footer role="contentinfo" >
+    	<p>
+		Copyright &copy; 2018 - Daniel Szukitsch -
+		 <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span> |
+		 <span class="credit">Themed with <a href="https://github.com/rwwaskk/linkedlist">LinkedList</a></span>
+	</p>
+    </footer>
+
+  </div>
+    <!-- JavaScript at the bottom for fast page loading -->
+
+  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
+  <!--
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+  -->
+  <script src="/javascripts/libs/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="js/libs/jquery-1.6.2.min.js"><\/script>')</script>
+
+
+  <!-- scripts concatenated and minified via ant build script-->
+  <script defer src="/javascripts/app.js"></script>
+  <!-- end scripts-->
+
+
+
+  <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
+       chromium.org/developers/how-tos/chrome-frame-getting-started -->
+  <!--[if lt IE 7 ]>
+    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+  <![endif]-->
+
+<!--
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+
+-->
+
+</body>
+</html>
+

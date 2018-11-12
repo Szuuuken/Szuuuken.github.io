@@ -1,0 +1,146 @@
+
+<!doctype html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!-- Consider adding an manifest.appcache: h5bp.com/d/Offline -->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
+       More info: h5bp.com/b/378 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>verschwundene Windows 10 taskbar/desktop icons |  Daniel Szukitsch</title>
+  <meta name="author" content="Daniel Szukitsch">
+  
+
+  
+  <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+
+  <!-- CSS: implied media=all -->
+  <!-- CSS concatenated and minified via ant build script-->
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <!--
+  <link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+  -->
+  <!-- end CSS-->
+
+  <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
+
+  <!-- All JavaScript at the bottom, except for Modernizr / Respond.
+       Modernizr enables HTML5 elements & feature detects; Respond is a polyfill for min/max-width CSS3 Media Queries
+       For optimal performance, use a custom Modernizr build: www.modernizr.com/download/ -->
+  <script src="/javascripts/libs/modernizr-2.0.6.min.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-MML-AM_CHTML' async></script>
+</head>
+
+<body id="post">
+
+  <div id="container">
+    <header>
+      <a href="/">
+        <img class="linked-list" src="/images/logo-yellow.svg">
+        <div class="author">Daniel Szukitsch</div>
+        <h1 class="subtitle">things i do</h1></a>
+    </header>
+
+    <nav role="navigation" ><ul class="main-navigation">
+  <li style='float:left;margin-right:5px'><a class='nav' href="/">Home</a></li>
+</ul><br><br>
+</nav>
+    <article>
+
+
+  <h1 class="article-title">Verschwundene Windows 10 Taskbar/desktop Icons</h1>
+  <div class="article-content"><p>Nach einem upgrade von Windows 8.1 auf Windows 10 war traten folgende Probleme auf:</p>
+
+<ul>
+<li>die Taskbar wurde zwar angezeigt, jedoch wurden keine Icons angezeigt</li>
+<li>das Startmenu ließ sich nicht mehr öffnen</li>
+<li>Desktop Icons waren verschwundene</li>
+<li>Metro Apps funktionierten nicht mehr &ndash;> unter anderem Systemsteuerung usw.</li>
+</ul>
+
+
+<p>Nach einer vielzahl von Versuchen das System zu reparieren ohne es neu zu installieren, fand ich diesen <a href="http://www.tenforums.com/general-support/15219-windows-10-start-menu-metro-apps-taskbar-icons-not-working.html#post337248" target="_blank">Post</a>. In diesem Post wurde beschrieben wie man alle Apps mit einem Powershell Befehl neustallieren kann:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='powershell'><span class='line'><span class="nb">Get-AppXPackage</span> <span class="n">-AllUsers</span> <span class="p">|</span> <span class="k">Foreach</span> <span class="p">{</span><span class="nb">Add-AppxPackage</span> <span class="n">-DisableDevelopmentMode</span> <span class="n">-Register</span> <span class="s2">&quot;</span><span class="p">$(</span><span class="nv">$_</span><span class="p">.</span><span class="n">InstallLocation</span><span class="p">)</span><span class="s2">\AppXManifest.xml&quot;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In meinem Fall lief das Skript mehrere Stunden und ich musste es abbrechen, aber nach einem neustart funktierte Windows 10 wieder wie gewohnt.</p>
+</div>
+  
+
+</article>
+
+
+      <p class="meta">
+      
+        <a class="basic-alignment left nav" href="/blog/2012/05/22/fedora-16-oracle-java-and-firefox/" title="Previous Post: Fedora 16: oracle java &amp; Firefox">&laquo; Fedora 16: oracle java &amp; Firefox</a>
+      
+      
+        <a class="basic-alignment right nav" href="/blog/2018/04/28/ausreisser-in-einer-liste-von-zahlen-erkennen/" title="Next Post: Ausreißer in einer Liste von Zahlen erkennen">Ausreißer in einer Liste von Zahlen erkennen &raquo;</a>
+      
+    </p>
+       <footer role="contentinfo" >
+    	<p>
+		Copyright &copy; 2018 - Daniel Szukitsch -
+		 <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span> |
+		 <span class="credit">Themed with <a href="https://github.com/rwwaskk/linkedlist">LinkedList</a></span>
+	</p>
+    </footer>
+
+  </div>
+    <!-- JavaScript at the bottom for fast page loading -->
+
+  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
+  <!--
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+  -->
+  <script src="/javascripts/libs/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="js/libs/jquery-1.6.2.min.js"><\/script>')</script>
+
+
+  <!-- scripts concatenated and minified via ant build script-->
+  <script defer src="/javascripts/app.js"></script>
+  <!-- end scripts-->
+
+
+
+  <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
+       chromium.org/developers/how-tos/chrome-frame-getting-started -->
+  <!--[if lt IE 7 ]>
+    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+  <![endif]-->
+
+<!--
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+
+-->
+
+</body>
+</html>
+
