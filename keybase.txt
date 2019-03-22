@@ -1,0 +1,56 @@
+==================================================================
+https://keybase.io/szuuuken
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://szuuuken.at
+  * I am szuuuken (https://keybase.io/szuuuken) on keybase.
+  * I have a public key ASBPUSmf6azWDogLxB125QeO1w7uXCbRMkDEiciuh0AlIwo
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "01204f51299fe9acd60e880bc41d76e5078ed70eee5c26d13240c489c8ae874025230a",
+      "host": "keybase.io",
+      "kid": "01204f51299fe9acd60e880bc41d76e5078ed70eee5c26d13240c489c8ae874025230a",
+      "uid": "98b59c25cbaa7356aa7ecb1d87dcb819",
+      "username": "szuuuken"
+    },
+    "merkle_root": {
+      "ctime": 1553253426,
+      "hash": "5224a00c14352f04105d44e250e1f030730eb0f669864fe9096238a9689d073ca7a59717312434f22404dfb73b51ddc7633f7822cddd337fc485c381e34f2103",
+      "hash_meta": "629576306f4b00b99950b667111b05273b815622efaf7b46d98eb7e48cdf637d",
+      "seqno": 5000986
+    },
+    "service": {
+      "entropy": "SI4Gh+FPkg70rLgrla1N7pKG",
+      "hostname": "szuuuken.at",
+      "protocol": "https:"
+    },
+    "type": "web_service_binding",
+    "version": 2
+  },
+  "client": {
+    "name": "keybase.io go client",
+    "version": "3.1.2"
+  },
+  "ctime": 1553253464,
+  "expire_in": 504576000,
+  "prev": "0b1dd03453c4fe4b165c027f37bc640ed98904fc52a19df4bc35a2b80212eec0",
+  "seqno": 5,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEgT1Epn+ms1g6IC8QdduUHjtcO7lwm0TJAxInIrodAJSMKp3BheWxvYWTESpcCBcQgCx3QNFPE/ksWXAJ/N7xkDtmJBPxSoZ30vDWiuAIS7sDEIA7MMCGuaDgwDrNahFnEoOiEUpS0gTwdaJmQqrJDcdIkAgHCo3NpZ8RAiOPfM+6nXwAuoKGxRRWgz38hLAfQEvag0hsmv96P7u6EMgqvwZ4PU9JfkcHIsSOZDIrIHW26vRPY7+IqWO9/BKhzaWdfdHlwZSCkaGFzaIKkdHlwZQildmFsdWXEICWng2qTD5FP1BUk/nKSBkYklAcd3fmNvIzluDIe/jmuo3RhZ80CAqd2ZXJzaW9uAQ==
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/szuuuken
+
+==================================================================
